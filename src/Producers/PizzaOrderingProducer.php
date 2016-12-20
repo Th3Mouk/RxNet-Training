@@ -9,8 +9,6 @@
 
 namespace Th3Mouk\RxTraining\Producers;
 
-use Rx\Observable;
-use Rx\Scheduler\EventLoopScheduler;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Output\OutputInterface;
 use Th3Mouk\RxTraining\Model\Order;
@@ -79,7 +77,7 @@ class PizzaOrderingProducer
                 // Here we produce the message (huuum quite pizza)
                 // Don't send object or array of object !
                 // Use JSON, array or string
-                Observable::interval(50)
+                \Rx\Observable::interval(50)
                     // Replace the message index by usefull datas
                     // This must be done because of "foreach" and dumb datas
                     ->map(function () {
@@ -106,7 +104,7 @@ class PizzaOrderingProducer
                             $this->output->writeln('<leaf>'.number_format($done) . ' lines produced in ' . (microtime(true) - $start) . 'ms</leaf>');
                             $loop->stop();
                         },
-                        new EventLoopScheduler($loop)
+                        new \Rx\Scheduler\EventLoopScheduler($loop)
                     );
             });
 
