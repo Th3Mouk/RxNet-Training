@@ -17,6 +17,13 @@ interupts.
 **Options**
 - orders: default `20`
 
+## Consume messages
+
+`php run consume`
+
+**Options**
+- type: default `simple`
+
 ## I'm a f***ing noob OMG help me
 
 Read the special [FAQ](resources/doc/hello-im-noob.md).
