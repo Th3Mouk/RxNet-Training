@@ -1,0 +1,8 @@
+{
+    "name": "jeremy/rx-train",
+    "author": "Jérémy Marodon <marodon.jeremy@gmail.com>",
+    "type": "project",
+    "require": {
+        "domraider/rxnet": "^0.4.0"
+    }
+}
