@@ -85,9 +85,10 @@ class PizzaOrderingProducer
                     ->map(function () {
                         return Order::generate();
                     })
-                    ->takeWhile(function () use (&$done) {
-                        return $done < $this->orders;
-                    })
+                    ->take($this->orders)
+                    //->take(function () use (&$done) {
+                    //    return $done < $this->orders;
+                    //})
                     // Wait for one produce to be done before starting another
                     ->flatMap(function ($data) use ($exchange) {
                         // Rabbit will handle serialize and unserialize
