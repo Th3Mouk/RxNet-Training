@@ -4,5 +4,13 @@
     "type": "project",
     "require": {
         "domraider/rxnet": "^0.4.0"
+    },
+    "require-dev": {
+        "sllh/php-cs-fixer-styleci-bridge": "^2.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Th3Mouk\\RxTraining\\": "src/"
+        }
     }
 }
