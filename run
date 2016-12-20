@@ -10,10 +10,11 @@
 require __DIR__.'/vendor/autoload.php';
 
 use Symfony\Component\Console\Application;
-use Th3Mouk\RxTraining\Commands\HelloCommand;
+use Th3Mouk\RxTraining\Commands\{HelloCommand, ProduceCommand};
 
 $application = new Application();
 
 $application->add(new HelloCommand());
+$application->add(new ProduceCommand());
 
 $application->run();
