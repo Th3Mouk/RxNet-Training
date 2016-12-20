@@ -12,9 +12,12 @@ namespace Th3Mouk\RxTraining\Commands;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Th3Mouk\RxTraining\Commands\Styles\SuccessTrait;
 
 class HelloCommand extends Command
 {
+    use SuccessTrait;
+
     protected function configure()
     {
         $this
@@ -32,10 +35,12 @@ class HelloCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $output->getFormatter()->setStyle('leaf', $this->getSuccessStyle());
+
         // outputs multiple lines to the console (adding "\n" at the end of each line)
         $output->writeln([
-            'Hello Dad',
-            '=========',
+            '<leaf>Hello Dad</leaf>',
+            '<leaf>=========</leaf>',
             '',
         ]);
     }
