@@ -5,7 +5,13 @@ container with Docker/Kitematic.
 
 ### Use RabbitMQ
 
-Connexion to human interface: `http://rabbit:15672/` or `http://localhost:15672/`
+Connexion to human interface: 
+`http://rabbit:15672/` or `http://localhost:15672/`
+
+##### Why this URL doesn't works ?
+
+Because the port configuration of RabbitMQ container on Kitematic isn't good.
+You must set `15672` = `15672`. 
 
 ##### What is my login/mdp ->
 [RTFM](https://hub.docker.com/_/rabbitmq/) guest/guest
@@ -16,6 +22,7 @@ Connexion to human interface: `http://rabbit:15672/` or `http://localhost:15672/
 
 ~~[Soluce1](https://github.com/voryx/event-loop)~~
 ~~[Soluce2](https://github.com/reactphp/event-loop)~~
+No real answer yet.
 
 ##### How works the invoke ?
 
@@ -38,3 +45,12 @@ latest (dev-master is the problem persist).
 ##### The class RabbitQueue lack of PHP documentation.
 
 ### Consumer
+
+##### OMG too difficult to understand how to make a delay between message consume.
+
+After understood where to put the operator it will be cool.
+
+##### So much operators... 
+
+Easy (Ezzz) there is a 
+[wonderful doc](http://reactivex.io/documentation/operators.html).
