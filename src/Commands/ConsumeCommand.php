@@ -15,6 +15,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Th3Mouk\RxTraining\Commands\Styles\SuccessTrait;
 use Th3Mouk\RxTraining\Consumers\PizzaOrderingConsumer;
+use Th3Mouk\RxTraining\Consumers\PizzaOrderingTimedConsumer;
 use Th3Mouk\RxTraining\Consumers\SimplePizzaOrderingConsumer;
 
 class ConsumeCommand extends Command
@@ -47,11 +48,15 @@ class ConsumeCommand extends Command
         $type = $input->getOption('type');
 
         switch ($type) {
+            case 'timed':
+                $consumer = new PizzaOrderingTimedConsumer($output);
+                break;
+
             default:
-                $ordering_consumer = new SimplePizzaOrderingConsumer($output);
+                $consumer = new SimplePizzaOrderingConsumer($output);
                 break;
         }
 
-        $ordering_consumer->consume();
+        $consumer->consume();
     }
 }
