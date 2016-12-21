@@ -42,6 +42,7 @@ class SimpleTimedConsumer
         \Rxnet\awaitOnce($rabbit->connect());
 
         $queue = $rabbit->queue('simple_queue', []);
+        $queue->setQos(1);
 
         // Will wait for message
         $queue->consume()
