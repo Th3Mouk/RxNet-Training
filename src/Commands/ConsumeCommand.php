@@ -16,6 +16,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Th3Mouk\RxTraining\Commands\Styles\SuccessTrait;
 use Th3Mouk\RxTraining\Consumers\SimpleBufferedConsumer;
 use Th3Mouk\RxTraining\Consumers\SimpleConsumer;
+use Th3Mouk\RxTraining\Consumers\SimpleDuplicateConsumer;
 use Th3Mouk\RxTraining\Consumers\SimpleTimedConsumer;
 
 class ConsumeCommand extends Command
@@ -54,6 +55,10 @@ class ConsumeCommand extends Command
 
             case 'buffered':
                 $consumer = new SimpleBufferedConsumer($output);
+                break;
+
+            case 'duplicate':
+                $consumer = new SimpleDuplicateConsumer($output);
                 break;
 
             default:

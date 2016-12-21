@@ -18,6 +18,10 @@ Don't forget to configure ports of RabbitMQ on your machine.
 
 Clone the project and launch `composer install`.
 
+### Redis
+
+For some consumer you need to install a Redis container.
+
 ## Test
 
 To test if the project is installed on your machine
@@ -43,6 +47,7 @@ There is several way to consume messages.
 - type: default `simple`
     - `timed` (consume a message each second)
     - `buffered` (consume 3 messages each two seconds)
+    - `duplicate` (deduplicate identical messages)
     
 **Example**
 `php run consume --type=buffered`

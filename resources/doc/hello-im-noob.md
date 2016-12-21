@@ -54,3 +54,38 @@ After understood where to put the operator it will be cool.
 
 Easy (Ezzz) there is a 
 [wonderful doc](http://reactivex.io/documentation/operators.html).
+
+##### How tow filter element with a function and time limitation
+
+Because we probably get multiple consumer running in parallel, we need a Redis.
+
+The second question is how to expire datas in Redis.
+
+##### How to connect a Redis ? Is it relevant ?
+
+Absolutly yeuus !
+Simply use RxNet and enter host configuration.
+
+Init it, config it, inject it, erase it.
+
+##### How to not lose a message ?
+
+Declare your queue as durable. Once you consume it don't forget to 
+`$message->ack();` to remove it from the queue.
+
+##### How to easily expire a value in Redis ?
+
+Use the [TTL](https://redis.io/commands/ttl) and the 
+[Expire](https://redis.io/commands/expire)
+
+##### Why the Redis exist always return null ?
+
+It not return null but an observable, think to use the flatmap operator.
+
+##### How manage parallelism ? Seems the consumer get all messages at once
+
+On this way the consumer only get one message at a time.
+
+```php
+$queue->setQos(1);
+```
