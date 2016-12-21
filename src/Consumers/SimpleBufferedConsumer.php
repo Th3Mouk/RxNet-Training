@@ -14,7 +14,10 @@ use Rx\Scheduler\EventLoopScheduler;
 use Rxnet\RabbitMq\RabbitMessage;
 use Symfony\Component\Console\Output\Output;
 
-class SimplePizzaOrderingConsumer
+/**
+ * This consumer consume 3 messages each 2 seconds
+ */
+class SimpleBufferedConsumer
 {
     /**
      * @var Output
@@ -42,21 +45,27 @@ class SimplePizzaOrderingConsumer
 
         // Will wait for message
         $queue->consume()
-            ->subscribeCallback(function (RabbitMessage $message) use ($rabbit) {
-                $data = $message->getData();
-                $perso_name = $data['name'];
+            ->bufferWithCount(3)
+            ->doOnNext(function () {
+                sleep(2);
+            })
+            ->subscribeCallback(function (array $messages) use ($loop, $rabbit) {
+                foreach ($messages as $message) {
+                    $data = $message->getData();
+                    $perso_name = $data['name'];
 
-                $name = $message->getName();
-                $head = $message->getLabels();
+                    $name = $message->getName();
+                    $head = $message->getLabels();
 
-                $this->output->writeln('<info>Just received '.$perso_name.' order</info>');
+                    $this->output->writeln('<info>Just received ' . $perso_name . ' order</info>');
 
-                // Do what you want but do one of this to get next
-                $message->ack();
-                //$message->nack();
-                //$message->reject();
-                //$message->rejectToBottom();
-            }, null, null, new EventLoopScheduler($loop));
+                    // Do what you want but do one of this to get next
+                    $message->ack();
+                    //$message->nack();
+                    //$message->reject();
+                    //$message->rejectToBottom();
+                }
+            });
 
         $loop->run();
     }

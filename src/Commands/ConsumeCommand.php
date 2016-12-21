@@ -14,10 +14,9 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Th3Mouk\RxTraining\Commands\Styles\SuccessTrait;
-use Th3Mouk\RxTraining\Consumers\PizzaOrderingBufferedConsumer;
-use Th3Mouk\RxTraining\Consumers\PizzaOrderingConsumer;
-use Th3Mouk\RxTraining\Consumers\PizzaOrderingTimedConsumer;
-use Th3Mouk\RxTraining\Consumers\SimplePizzaOrderingConsumer;
+use Th3Mouk\RxTraining\Consumers\SimpleBufferedConsumer;
+use Th3Mouk\RxTraining\Consumers\SimpleConsumer;
+use Th3Mouk\RxTraining\Consumers\SimpleTimedConsumer;
 
 class ConsumeCommand extends Command
 {
@@ -50,15 +49,15 @@ class ConsumeCommand extends Command
 
         switch ($type) {
             case 'timed':
-                $consumer = new PizzaOrderingTimedConsumer($output);
+                $consumer = new SimpleTimedConsumer($output);
                 break;
 
             case 'buffered':
-                $consumer = new PizzaOrderingBufferedConsumer($output);
+                $consumer = new SimpleBufferedConsumer($output);
                 break;
 
             default:
-                $consumer = new SimplePizzaOrderingConsumer($output);
+                $consumer = new SimpleConsumer($output);
                 break;
         }
 
