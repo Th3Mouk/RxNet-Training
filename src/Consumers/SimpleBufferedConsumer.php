@@ -54,7 +54,6 @@ class SimpleBufferedConsumer
                     $data = $message->getData();
                     $perso_name = $data['name'];
 
-                    $name = $message->getName();
                     $head = $message->getLabels();
 
                     $this->output->writeln('<info>Just received ' . $perso_name . ' order</info>');
