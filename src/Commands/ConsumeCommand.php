@@ -14,8 +14,10 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Th3Mouk\RxTraining\Commands\Styles\SuccessTrait;
+use Th3Mouk\RxTraining\Consumers\AnotherSimpleDisconnectedConsumer;
 use Th3Mouk\RxTraining\Consumers\SimpleBufferedConsumer;
 use Th3Mouk\RxTraining\Consumers\SimpleConsumer;
+use Th3Mouk\RxTraining\Consumers\SimpleDisconnectedConsumer;
 use Th3Mouk\RxTraining\Consumers\SimpleDuplicateConsumer;
 use Th3Mouk\RxTraining\Consumers\SimpleProducerConsumer;
 use Th3Mouk\RxTraining\Consumers\SimpleTimedConsumer;
@@ -64,6 +66,10 @@ class ConsumeCommand extends Command
 
             case 'produce':
                 $consumer = new SimpleProducerConsumer($output);
+                break;
+
+            case 'disconnected':
+                $consumer = new SimpleDisconnectedConsumer($output);
                 break;
 
             default:

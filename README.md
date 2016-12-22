@@ -49,6 +49,7 @@ There is several way to consume messages.
     - `buffered` (consume 3 messages each two seconds)
     - `duplicate` (deduplicate identical messages)
     - `produce` (produce a message at reception)
+    - `disconnected` (handle the disconnection of rabbit servor)
     
 **Example**
 `php run consume --type=buffered`
