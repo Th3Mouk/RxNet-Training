@@ -1,4 +1,4 @@
-# Noobie FAQ quests 
+# Noobie FAQ 
 
 I start from the postulate that you have a default install of RabbitMQ 
 container with Docker/Kitematic.
@@ -22,7 +22,7 @@ You must set `15672` = `15672`.
 
 ~~[Soluce1](https://github.com/voryx/event-loop)~~
 ~~[Soluce2](https://github.com/reactphp/event-loop)~~
-No real answer yet.
+No real answer yet just infinite loop i think so.
 
 #### How works the invoke ?
 
@@ -89,3 +89,25 @@ On this way the consumer only get one message at a time.
 ```php
 $queue->setQos(1);
 ```
+
+#### My consumer doesn't restart when connection is restablished
+
+You need to listen the next callback of your retryWhen.
+
+#### [Error] ImmediateScheduler does not support a non-zero delay.
+
+You need a EventLoopScheduler in your subscribtion.
+
+#### My channel or my queue is null
+
+So your rabbit isn't connected at runtime.
+
+#### Why using subscribe instead of subscribeCallback ?
+
+If you don't handle onError and onComplete with callbacks, but you manipulate
+the time like delay, timeout..., you will put a `SchedulerInterface` as last 
+argument (`null, null, new EventLoopScheduler(...)`).
+
+For readibily you can use subscribe a `new CallbackObserver(...)` in first
+argument of subscribe method, instead of 3 arguments with subscribeCallback, 
+and then your `EventLoopScheduler(...)` in second argument.
