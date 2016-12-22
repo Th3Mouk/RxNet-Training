@@ -3,86 +3,86 @@
 I start from the postulate that you have a default install of RabbitMQ 
 container with Docker/Kitematic.
 
-### Use RabbitMQ
+## Use RabbitMQ
 
 Connexion to human interface: 
 `http://rabbit:15672/` or `http://localhost:15672/`
 
-##### Why this URL doesn't works ?
+#### Why this URL doesn't works ?
 
 Because the port configuration of RabbitMQ container on Kitematic isn't good.
 You must set `15672` = `15672`. 
 
-##### What is my login/mdp ->
+#### What is my login/mdp ->
 [RTFM](https://hub.docker.com/_/rabbitmq/) guest/guest
 
-### Producer
+## Producer
 
-##### What is an event loop ?
+#### What is an event loop ?
 
 ~~[Soluce1](https://github.com/voryx/event-loop)~~
 ~~[Soluce2](https://github.com/reactphp/event-loop)~~
 No real answer yet.
 
-##### How works the invoke ?
+#### How works the invoke ?
 
 [PHPDoc](http://php.net/manual/fr/language.oop5.magic.php#object.invoke)
 
-##### Why must I use the port 5672 of RabbitMQ ?
+#### Why must I use the port 5672 of RabbitMQ ?
 
 'Cause it's the default value of `tcp_listeners`. [Doc](https://www.rabbitmq.com/configure.html)
 
-##### How does work subscribeCallback method ?
+#### How does work subscribeCallback method ?
 
 First is the callback before the next iteration, second the closure to handle
 errors and finally the callback when submission is complete.
 
-##### Call to undefined method React\Promise\Promise::flatMap()
+#### Call to undefined method React\Promise\Promise::flatMap()
 
 Check that version of [Bunny](https://github.com/Domraider/bunny) is the 
 latest (dev-master is the problem persist).
 
-##### The class RabbitQueue lack of PHP documentation.
+#### The class RabbitQueue lack of PHP documentation.
 
-### Consumer
+## Consumer
 
-##### OMG too difficult to understand how to make a delay between message consume.
+#### OMG too difficult to understand how to make a delay between message consume.
 
 After understood where to put the operator it will be cool.
 
-##### So much operators... 
+#### So much operators... 
 
 Easy (Ezzz) there is a 
 [wonderful doc](http://reactivex.io/documentation/operators.html).
 
-##### How tow filter element with a function and time limitation
+#### How tow filter element with a function and time limitation
 
 Because we probably get multiple consumer running in parallel, we need a Redis.
 
 The second question is how to expire datas in Redis.
 
-##### How to connect a Redis ? Is it relevant ?
+#### How to connect a Redis ? Is it relevant ?
 
 Absolutly yeuus !
 Simply use RxNet and enter host configuration.
 
 Init it, config it, inject it, erase it.
 
-##### How to not lose a message ?
+#### How to not lose a message ?
 
 Declare your queue as durable. Once you consume it don't forget to 
 `$message->ack();` to remove it from the queue.
 
-##### How to easily expire a value in Redis ?
+#### How to easily expire a value in Redis ?
 
 Use the [TTL](https://redis.io/commands/ttl) and the 
 [Expire](https://redis.io/commands/expire)
 
-##### Why the Redis exist always return null ?
+#### Why the Redis exist always return null ?
 
 It not return null but an observable, think to use the flatmap operator.
 
-##### How manage parallelism ? Seems the consumer get all messages at once
+#### How manage parallelism ? Seems the consumer get all messages at once
 
 On this way the consumer only get one message at a time.
 
