@@ -17,6 +17,7 @@ use Th3Mouk\RxTraining\Commands\Styles\SuccessTrait;
 use Th3Mouk\RxTraining\Consumers\SimpleBufferedConsumer;
 use Th3Mouk\RxTraining\Consumers\SimpleConsumer;
 use Th3Mouk\RxTraining\Consumers\SimpleDuplicateConsumer;
+use Th3Mouk\RxTraining\Consumers\SimpleProducerConsumer;
 use Th3Mouk\RxTraining\Consumers\SimpleTimedConsumer;
 
 class ConsumeCommand extends Command
@@ -59,6 +60,10 @@ class ConsumeCommand extends Command
 
             case 'duplicate':
                 $consumer = new SimpleDuplicateConsumer($output);
+                break;
+
+            case 'produce':
+                $consumer = new SimpleProducerConsumer($output);
                 break;
 
             default:

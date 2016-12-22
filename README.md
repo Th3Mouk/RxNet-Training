@@ -48,6 +48,7 @@ There is several way to consume messages.
     - `timed` (consume a message each second)
     - `buffered` (consume 3 messages each two seconds)
     - `duplicate` (deduplicate identical messages)
+    - `produce` (produce a message at reception)
     
 **Example**
 `php run consume --type=buffered`
