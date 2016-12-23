@@ -14,6 +14,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Th3Mouk\RxTraining\Commands\Styles\SuccessTrait;
+use Th3Mouk\RxTraining\Producers\LoopingProducer;
 use Th3Mouk\RxTraining\Producers\PizzaOrderingProducer;
 
 class ProduceCommand extends Command
@@ -27,7 +28,16 @@ class ProduceCommand extends Command
             ->setName('produce')
 
             // the short description of the command
-            ->setDescription('Generate some dumb pizza ordering.')
+            ->setDescription('Generate some messages to consume.')
+
+            // select which producer to use
+            ->addOption(
+                'type',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Type of producers to use',
+                'orders'
+            )
 
             // number of pizza ordering
             ->addOption(
@@ -44,8 +54,18 @@ class ProduceCommand extends Command
     {
         $output->getFormatter()->setStyle('leaf', $this->getSuccessStyle());
         $orders = $input->getOption('orders');
+        $type = $input->getOption('type');
 
-        $pizza_producer = new PizzaOrderingProducer($output, $orders);
-        $pizza_producer->produce();
+        switch ($type) {
+            case 'loop':
+                $producer = new LoopingProducer($output);
+                break;
+
+            default:
+                $producer = new PizzaOrderingProducer($output, $orders);
+                break;
+        }
+
+        $producer->produce();
     }
 }

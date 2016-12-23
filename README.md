@@ -35,6 +35,9 @@ This command start to produce a number of message.
 `php run produce`
 
 **Options**
+- type: default `orders`
+    - `loop` (produce a simply message for a looper)
+
 - orders: default `20`
 
 ## Consume messages
@@ -48,6 +51,7 @@ There is several way to consume messages.
     - `timed` (consume a message each second)
     - `buffered` (consume 3 messages each two seconds)
     - `duplicate` (deduplicate identical messages)
+    - `looper` (simply loop on a queue to detect a full iteration)
     - `produce` (produce a message at reception)
     - `disconnected` (handle the disconnection of rabbit servor)
     - `backbuffer` (handle disconnection of production in memory)

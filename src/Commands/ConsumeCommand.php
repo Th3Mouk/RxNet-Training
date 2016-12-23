@@ -20,6 +20,7 @@ use Th3Mouk\RxTraining\Consumers\SimpleBufferedConsumer;
 use Th3Mouk\RxTraining\Consumers\SimpleConsumer;
 use Th3Mouk\RxTraining\Consumers\SimpleDisconnectedConsumer;
 use Th3Mouk\RxTraining\Consumers\SimpleDuplicateConsumer;
+use Th3Mouk\RxTraining\Consumers\SimpleLooperConsumer;
 use Th3Mouk\RxTraining\Consumers\SimpleProducerConsumer;
 use Th3Mouk\RxTraining\Consumers\SimpleTimedConsumer;
 
@@ -63,6 +64,10 @@ class ConsumeCommand extends Command
 
             case 'duplicate':
                 $consumer = new SimpleDuplicateConsumer($output);
+                break;
+
+            case 'looper':
+                $consumer = new SimpleLooperConsumer($output);
                 break;
 
             case 'produce':
