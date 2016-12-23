@@ -15,6 +15,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Th3Mouk\RxTraining\Commands\Styles\SuccessTrait;
 use Th3Mouk\RxTraining\Consumers\AnotherSimpleDisconnectedConsumer;
+use Th3Mouk\RxTraining\Consumers\GorillaBackBufferConsumer;
 use Th3Mouk\RxTraining\Consumers\SimpleBufferedConsumer;
 use Th3Mouk\RxTraining\Consumers\SimpleConsumer;
 use Th3Mouk\RxTraining\Consumers\SimpleDisconnectedConsumer;
@@ -70,6 +71,10 @@ class ConsumeCommand extends Command
 
             case 'disconnected':
                 $consumer = new SimpleDisconnectedConsumer($output);
+                break;
+
+            case 'backbuffer':
+                $consumer = new GorillaBackBufferConsumer($output);
                 break;
 
             default:

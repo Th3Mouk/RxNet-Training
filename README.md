@@ -50,6 +50,7 @@ There is several way to consume messages.
     - `duplicate` (deduplicate identical messages)
     - `produce` (produce a message at reception)
     - `disconnected` (handle the disconnection of rabbit servor)
+    - `backbuffer` (handle disconnection of production in memory)
     
 **Example**
 `php run consume --type=buffered`
