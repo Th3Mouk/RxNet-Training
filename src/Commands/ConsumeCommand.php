@@ -22,6 +22,7 @@ use Th3Mouk\RxTraining\Consumers\SimpleDisconnectedConsumer;
 use Th3Mouk\RxTraining\Consumers\SimpleDuplicateConsumer;
 use Th3Mouk\RxTraining\Consumers\SimpleLooperConsumer;
 use Th3Mouk\RxTraining\Consumers\SimpleProducerConsumer;
+use Th3Mouk\RxTraining\Consumers\SimpleRoutableConsumer;
 use Th3Mouk\RxTraining\Consumers\SimpleTimedConsumer;
 
 class ConsumeCommand extends Command
@@ -80,6 +81,10 @@ class ConsumeCommand extends Command
 
             case 'backbuffer':
                 $consumer = new GorillaBackBufferConsumer($output);
+                break;
+
+            case 'routable':
+                $consumer = new SimpleRoutableConsumer($output);
                 break;
 
             default:

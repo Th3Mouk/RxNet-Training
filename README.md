@@ -55,6 +55,7 @@ There is several way to consume messages.
     - `produce` (produce a message at reception)
     - `disconnected` (handle the disconnection of rabbit servor)
     - `backbuffer` (handle disconnection of production in memory)
+    - `routable` (simply consume in another way)
     
 **Example**
 `php run consume --type=buffered`

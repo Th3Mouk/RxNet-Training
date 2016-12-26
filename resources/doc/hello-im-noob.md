@@ -111,3 +111,5 @@ argument (`null, null, new EventLoopScheduler(...)`).
 For readibily you can use subscribe a `new CallbackObserver(...)` in first
 argument of subscribe method, instead of 3 arguments with subscribeCallback, 
 and then your `EventLoopScheduler(...)` in second argument.
+
+#### Lack of docs on routable subjects
