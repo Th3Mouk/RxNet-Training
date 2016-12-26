@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Th3Mouk\RxTraining\Consumers;
+namespace Th3Mouk\RxTraining\Consumers\Simple;
 
 use EventLoop\EventLoop;
 use Rx\Observer\CallbackObserver;

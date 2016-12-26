@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Th3Mouk\RxTraining\Consumers;
+namespace Th3Mouk\RxTraining\Consumers\Simple;
 
 use EventLoop\EventLoop;
 use Rx\Scheduler\EventLoopScheduler;
@@ -15,9 +15,9 @@ use Rxnet\RabbitMq\RabbitMessage;
 use Symfony\Component\Console\Output\Output;
 
 /**
- * This consumer consume a message each second
+ * This consumer consume 3 messages each 2 seconds
  */
-class SimpleTimedConsumer
+class SimpleBufferedConsumer
 {
     /**
      * @var Output
@@ -46,18 +46,25 @@ class SimpleTimedConsumer
 
         // Will wait for message
         $queue->consume()
+            ->bufferWithCount(3)
             ->doOnNext(function () {
-                sleep(1);
+                sleep(2);
             })
-            ->subscribeCallback(function (RabbitMessage $message) use ($loop, $rabbit) {
-                $data = $message->getData();
-                $perso_name = $data['name'];
+            ->subscribeCallback(function (array $messages) use ($loop, $rabbit) {
+                foreach ($messages as $message) {
+                    $data = $message->getData();
+                    $perso_name = $data['name'];
 
-                $head = $message->getLabels();
+                    $head = $message->getLabels();
 
-                $this->output->writeln('<info>Just received '.$perso_name.' order</info>');
+                    $this->output->writeln('<info>Just received ' . $perso_name . ' order</info>');
 
-                $message->ack();
+                    // Do what you want but do one of this to get next
+                    $message->ack();
+                    //$message->nack();
+                    //$message->reject();
+                    //$message->rejectToBottom();
+                }
             });
 
         $loop->run();

@@ -16,14 +16,14 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Th3Mouk\RxTraining\Commands\Styles\SuccessTrait;
 use Th3Mouk\RxTraining\Consumers\AnotherSimpleDisconnectedConsumer;
 use Th3Mouk\RxTraining\Consumers\GorillaBackBufferConsumer;
-use Th3Mouk\RxTraining\Consumers\SimpleBufferedConsumer;
-use Th3Mouk\RxTraining\Consumers\SimpleConsumer;
-use Th3Mouk\RxTraining\Consumers\SimpleDisconnectedConsumer;
-use Th3Mouk\RxTraining\Consumers\SimpleDuplicateConsumer;
-use Th3Mouk\RxTraining\Consumers\SimpleLooperConsumer;
-use Th3Mouk\RxTraining\Consumers\SimpleProducerConsumer;
-use Th3Mouk\RxTraining\Consumers\SimpleRoutableConsumer;
-use Th3Mouk\RxTraining\Consumers\SimpleTimedConsumer;
+use Th3Mouk\RxTraining\Consumers\Simple\SimpleBufferedConsumer;
+use Th3Mouk\RxTraining\Consumers\Simple\SimpleConsumer;
+use Th3Mouk\RxTraining\Consumers\Simple\SimpleDisconnectedConsumer;
+use Th3Mouk\RxTraining\Consumers\Simple\SimpleDuplicateConsumer;
+use Th3Mouk\RxTraining\Consumers\Simple\SimpleLooperConsumer;
+use Th3Mouk\RxTraining\Consumers\Simple\SimpleProducerConsumer;
+use Th3Mouk\RxTraining\Consumers\Simple\SimpleRoutableConsumer;
+use Th3Mouk\RxTraining\Consumers\Simple\SimpleTimedConsumer;
 
 class ConsumeCommand extends Command
 {
