@@ -113,3 +113,20 @@ argument of subscribe method, instead of 3 arguments with subscribeCallback,
 and then your `EventLoopScheduler(...)` in second argument.
 
 #### Lack of docs on routable subjects
+
+#### Why my loop of production with backpressure dont fully iterate ?
+
+If an operator trigger the `onComplete` method of your interval observable,
+any event (like buffer) are stopped.
+
+Don't plug `take` operator and `backpressure` together, use a subscriber on 
+`take` to detach the event chain.
+ 
+#### [Error] Argument 1 passed to Rx\Operator\MergeAllOperator::Rx\Operator\{closure}() must implement interface Rx\ObservableInterface, null given
+
+You probably break the chain of events.
+Check if a map or a flatMap or something else don't miss a return.
+
+#### Hell how this can be functional ?
+
+[code](https://github.com/ReactiveX/RxPHP/blob/4807ab11285bb3f5e665cff2ead766d72f775a87/lib/Rx/Operator/CountOperator.php#L45)
