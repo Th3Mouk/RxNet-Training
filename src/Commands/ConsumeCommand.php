@@ -38,6 +38,15 @@ class ConsumeCommand extends Command
             // the short description of the command
             ->setDescription('Consume some dumb pizza ordering.')
 
+            // select difficulty of consumer to use
+            ->addOption(
+                'level',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Difficulty of consumer to use',
+                'simple'
+            )
+
             // select which consumer to use
             ->addOption(
                 'type',
@@ -54,44 +63,40 @@ class ConsumeCommand extends Command
         $output->getFormatter()->setStyle('leaf', $this->getSuccessStyle());
         $type = $input->getOption('type');
 
-        switch ($type) {
-            case 'timed':
-                $consumer = new SimpleTimedConsumer($output);
-                break;
-
-            case 'buffered':
-                $consumer = new SimpleBufferedConsumer($output);
-                break;
-
-            case 'duplicate':
-                $consumer = new SimpleDuplicateConsumer($output);
-                break;
-
-            case 'looper':
-                $consumer = new SimpleLooperConsumer($output);
-                break;
-
-            case 'produce':
-                $consumer = new SimpleProducerConsumer($output);
-                break;
-
-            case 'disconnected':
-                $consumer = new SimpleDisconnectedConsumer($output);
-                break;
-
-            case 'backbuffer':
-                $consumer = new GorillaBackBufferConsumer($output);
-                break;
-
-            case 'routable':
-                $consumer = new SimpleRoutableConsumer($output);
-                break;
-
-            default:
-                $consumer = new SimpleConsumer($output);
-                break;
-        }
+        $consumer = $this->easy($output, $type);
 
         $consumer->consume();
+    }
+
+    private function easy(OutputInterface $output, string $type){
+        switch ($type) {
+            case 'timed':
+                return new SimpleTimedConsumer($output);
+
+            case 'buffered':
+                return new SimpleBufferedConsumer($output);
+
+            case 'duplicate':
+                return new SimpleDuplicateConsumer($output);
+
+            case 'looper':
+                return new SimpleLooperConsumer($output);
+
+            case 'produce':
+                return new SimpleProducerConsumer($output);
+
+            case 'disconnected':
+                return new SimpleDisconnectedConsumer($output);
+
+            case 'backbuffer':
+                return new GorillaBackBufferConsumer($output);
+
+            case 'routable':
+                return new SimpleRoutableConsumer($output);
+
+            default:
+                return new SimpleConsumer($output);
+        }
+
     }
 }

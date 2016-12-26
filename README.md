@@ -57,8 +57,11 @@ There is several way to consume messages.
     - `backbuffer` (handle disconnection of production in memory)
     - `routable` (simply consume in another way)
     
+- level: default `easy`
+    - `hard` (use operators)
+    
 **Example**
-`php run consume --type=buffered`
+`php run consume --type=buffered --level=hard`
 
 ## I'm a f***ing noob OMG help me
 
