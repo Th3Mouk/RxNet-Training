@@ -10,6 +10,7 @@
 namespace Th3Mouk\RxTraining\Consumers\Simple;
 
 use EventLoop\EventLoop;
+use Rx\Observer\CallbackObserver;
 use Rx\Scheduler\EventLoopScheduler;
 use Rxnet\RabbitMq\RabbitMessage;
 use Symfony\Component\Console\Output\Output;
@@ -25,48 +26,50 @@ class SimpleBufferedConsumer
     private $output;
 
     /**
-     * PizzaOrderingConsumer constructor.
+     * @var \React\EventLoop\LibEventLoop
+     */
+    private $loop;
+
+    /**
+     * @var \Rxnet\RabbitMq\RabbitMq
+     */
+    private $rabbit;
+
+    /**
+     * SimpleBufferedConsumer constructor.
      * @param Output $output
      */
     public function __construct(Output $output)
     {
         $this->output = $output;
+        $this->loop = EventLoop::getLoop();
+        $this->rabbit = new \Rxnet\RabbitMq\RabbitMq('rabbit://guest:guest@127.0.0.1:5672/', new \Rxnet\Serializer\Serialize());
     }
 
     public function consume()
     {
-        $loop = EventLoop::getLoop();
-        $rabbit = new \Rxnet\RabbitMq\RabbitMq('rabbit://guest:guest@127.0.0.1:5672/', new \Rxnet\Serializer\Serialize());
-
         // Wait for rabbit to be connected
-        \Rxnet\awaitOnce($rabbit->connect());
+        \Rxnet\awaitOnce($this->rabbit->connect());
 
-        $queue = $rabbit->queue('simple_queue', []);
-        $queue->setQos(1);
+        $queue = $this->rabbit->queue('simple_queue', []);
+        $queue->setQos(3);
 
         // Will wait for message
         $queue->consume()
             ->bufferWithCount(3)
-            ->doOnNext(function () {
-                sleep(2);
-            })
-            ->subscribeCallback(function (array $messages) use ($loop, $rabbit) {
+            ->delay(1000)
+            ->subscribe(new CallbackObserver(function (array $messages) {
                 foreach ($messages as $message) {
                     $data = $message->getData();
                     $perso_name = $data['name'];
-
-                    $head = $message->getLabels();
 
                     $this->output->writeln('<info>Just received ' . $perso_name . ' order</info>');
 
                     // Do what you want but do one of this to get next
                     $message->ack();
-                    //$message->nack();
-                    //$message->reject();
-                    //$message->rejectToBottom();
                 }
-            });
+            }), new EventLoopScheduler($this->loop));
 
-        $loop->run();
+        $this->loop->run();
     }
 }
