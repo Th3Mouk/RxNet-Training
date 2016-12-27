@@ -46,7 +46,7 @@ class SimpleBufferedConsumer
         $this->rabbit = new \Rxnet\RabbitMq\RabbitMq('rabbit://guest:guest@127.0.0.1:5672/', new \Rxnet\Serializer\Serialize());
     }
 
-    public function consume()
+    public function start()
     {
         // Wait for rabbit to be connected
         \Rxnet\awaitOnce($this->rabbit->connect());

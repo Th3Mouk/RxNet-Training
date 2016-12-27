@@ -66,7 +66,7 @@ class ConsumeCommand extends Command
 
         $consumer = $this->easy($output, $type);
 
-        $consumer->consume();
+        $consumer->start();
     }
 
     private function easy(OutputInterface $output, string $type)
