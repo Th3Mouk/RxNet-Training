@@ -64,11 +64,7 @@ class ConsumeCommand extends Command
         $output->getFormatter()->setStyle('leaf', $this->getSuccessStyle());
         $type = $input->getOption('type');
 
-        if ($input->getOption('level') === 'hard') {
-            $consumer = $this->hard($output, $type);
-        } else {
-            $consumer = $this->easy($output, $type);
-        }
+        $consumer = $this->easy($output, $type);
 
         $consumer->consume();
     }
@@ -102,14 +98,6 @@ class ConsumeCommand extends Command
 
             default:
                 return new SimpleConsumer($output);
-        }
-    }
-
-    private function hard(OutputInterface $output, string $type)
-    {
-        switch ($type) {
-            default:
-                return new HardTimedConsumer($output);
         }
     }
 }
