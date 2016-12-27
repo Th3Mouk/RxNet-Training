@@ -12,8 +12,6 @@ namespace Th3Mouk\RxTraining\Consumers\Simple;
 use EventLoop\EventLoop;
 use Rx\Observer\CallbackObserver;
 use Rx\Scheduler\EventLoopScheduler;
-use Rxnet\Event\Event;
-use Rxnet\Observer\StdOutObserver;
 use Rxnet\RabbitMq\RabbitMessage;
 use Rxnet\Routing\RoutableSubject;
 use Symfony\Component\Console\Output\Output;
@@ -39,6 +37,11 @@ class SimpleRoutableConsumer
      * @var \Rxnet\RabbitMq\RabbitMq
      */
     private $rabbit;
+
+    /**
+     * @var \Rxnet\RabbitMq\RabbitExchange
+     */
+    private $exchange;
 
     /**
      * SimpleRoutableConsumer constructor.
@@ -79,40 +82,45 @@ class SimpleRoutableConsumer
 
                 // Will wait for message
                 $queue->consume()
-                    ->subscribe(new CallbackObserver(function (RabbitMessage $message) use ($exchange) {
-                        $data = $message->getData();
-                        $perso_name = $data['name'];
-
-                        $this->output->writeln('<info>Just received '.$perso_name.' order</info>');
-
-                        $subject = new RoutableSubject($message->getRoutingKey(), $message->getData(), $message->getLabels());
-                        // Give 5s to handle the subject or reject it to bottom (with all its changes)
-                        $subject->timeout(5000)
-                            ->subscribeCallback(
-                            // Ignore onNext
-                                null,
-                                function () use ($message) {
-                                    $datas = $message->getData();
-                                    $this->output->writeln('<error>Something wrong with '.$datas['name'].' order</error>');
-                                    $message->rejectToBottom();
-                                },
-                                function () use ($message) {
-                                    $datas = $message->getData();
-                                    $this->output->writeln('<leaf>Preparation of '.$datas['name'].' order started</leaf>');
-                                    $message->ack();
-                                },
-                                new EventLoopScheduler($this->loop)
-                            );
-
-                        $subject->flatMap(function ($datas) use ($exchange) {
-                            // Rabbit will handle serialize and unserialize
-                            return $exchange->produce($datas, self::ROUTING_KEY_PIZZA_PREPARATION);
-                        });
-
-                        $subject->onCompleted();
-                    }));
+                    ->subscribe($this->producer());
             }), new EventLoopScheduler($this->loop));
 
         $this->loop->run();
+    }
+
+    private function producer()
+    {
+        return new CallbackObserver(function (RabbitMessage $message) {
+            $data = $message->getData();
+            $perso_name = $data['name'];
+
+            $this->output->writeln('<info>Just received '.$perso_name.' order</info>');
+
+            $subject = new RoutableSubject($message->getRoutingKey(), $message->getData(), $message->getLabels());
+            // Give 5s to handle the subject or reject it to bottom (with all its changes)
+            $subject->timeout(5000)
+                ->subscribeCallback(
+                // Ignore onNext
+                    null,
+                    function () use ($message) {
+                        $datas = $message->getData();
+                        $this->output->writeln('<error>Something wrong with '.$datas['name'].' order</error>');
+                        $message->rejectToBottom();
+                    },
+                    function () use ($message) {
+                        $datas = $message->getData();
+                        $this->output->writeln('<leaf>Preparation of '.$datas['name'].' order started</leaf>');
+                        $message->ack();
+                    },
+                    new EventLoopScheduler($this->loop)
+                );
+
+            $subject->flatMap(function ($datas) {
+                // Rabbit will handle serialize and unserialize
+                return $this->exchange->produce($datas, self::ROUTING_KEY_PIZZA_PREPARATION);
+            });
+
+            $subject->onCompleted();
+        });
     }
 }
