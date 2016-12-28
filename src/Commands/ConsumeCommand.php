@@ -16,7 +16,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Th3Mouk\RxTraining\Commands\Styles\SuccessTrait;
 use Th3Mouk\RxTraining\Consumers\AnotherSimpleDisconnectedConsumer;
 use Th3Mouk\RxTraining\Consumers\GorillaBackBufferConsumer;
-use Th3Mouk\RxTraining\Consumers\Hard\HardTimedConsumer;
+use Th3Mouk\RxTraining\Consumers\Hard\HardCombinedConsumer;
 use Th3Mouk\RxTraining\Consumers\Simple\SimpleBufferedConsumer;
 use Th3Mouk\RxTraining\Consumers\Simple\SimpleConsumer;
 use Th3Mouk\RxTraining\Consumers\Simple\SimpleDisconnectedConsumer;
@@ -64,7 +64,11 @@ class ConsumeCommand extends Command
         $output->getFormatter()->setStyle('leaf', $this->getSuccessStyle());
         $type = $input->getOption('type');
 
-        $consumer = $this->easy($output, $type);
+        if ($input->getOption('level') === 'hard') {
+            $consumer = $this->hard($output, $type);
+        } else {
+            $consumer = $this->easy($output, $type);
+        }
 
         $consumer->start();
     }
@@ -98,6 +102,14 @@ class ConsumeCommand extends Command
 
             default:
                 return new SimpleConsumer($output);
+        }
+    }
+
+    private function hard(OutputInterface $output, string $type)
+    {
+        switch ($type) {
+            default:
+                return new HardCombinedConsumer($output);
         }
     }
 }
