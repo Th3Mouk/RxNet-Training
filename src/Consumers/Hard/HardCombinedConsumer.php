@@ -161,7 +161,7 @@ class HardCombinedConsumer
                 })
                 ->flatMap($this->produce())
                 ->doOnNext(function (Event $event) use ($messageStream) {
-                    if ($event->is('/complete')) {
+                    if ($event->is('pizza.ordering.complete')) {
                         $messageStream->onCompleted();
                     }
                 })
@@ -183,20 +183,19 @@ class HardCombinedConsumer
 
             if (isset($data['name'])) {
                 $perso_name = $data['name'];
-
                 $this->output->writeln('<info>Just received '.$perso_name.' order</info>');
             }
 
             $subject = new RoutableSubject(
                 $message->getRoutingKey(),
-                $message,
+                $message->getData(),
                 $message->getLabels()
             );
 
             // Give 2s to handle the subject or reject it to bottom (with all its changes)
             $subject
                 ->filter(function (Event $event) {
-                    return !$event->is('/complete');
+                    return !$event->is('pizza.ordering.complete');
                 })
                 ->flatMap(function () use ($message) {
                     // Rabbit will handle serialize and unserialize
@@ -209,7 +208,7 @@ class HardCombinedConsumer
                     null,
                     function () use ($message) {
                         $datas = $message->getData();
-                        $this->output->writeln('<error>Something wrong with '.$datas['name'].' order</error>');
+                        $this->output->writeln('<error>Timeout to send '.$datas['name'].' order. Retrying.</error>');
                         $message->rejectToBottom();
                     },
                     function () use ($message, $subject) {
@@ -217,12 +216,12 @@ class HardCombinedConsumer
                         $this->output->writeln('<leaf>Preparation of '.$datas['name'].' order started</leaf>');
                         $message->ack();
 
-                        $subject->onNext(new Event('/complete'));
+                        $subject->onNext(new Event('pizza.ordering.complete'));
                     },
                     new EventLoopScheduler($this->loop)
             );
 
-            $subject->onNext(new Event('Lets produce'));
+            $subject->onNext(new Event('pizza.ordering.send'));
 
             return $subject;
         };
