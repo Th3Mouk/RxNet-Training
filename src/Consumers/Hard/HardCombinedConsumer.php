@@ -18,6 +18,7 @@ use Rxnet\Event\Event;
 use Rxnet\RabbitMq\RabbitMessage;
 use Rxnet\Routing\RoutableSubject;
 use Symfony\Component\Console\Output\OutputInterface;
+use Th3Mouk\RxTraining\Operators\LoopDetectorOperator;
 use Th3Mouk\RxTraining\Operators\RedisMessageFilterOperator;
 
 class HardCombinedConsumer
@@ -127,13 +128,18 @@ class HardCombinedConsumer
             }
 
             $this->consumer = $queue->consume()
-                ->delay(1000)
-                ->flatMap($this->checkLoop())
-                ->flatMap($this->checkProduce())
-                ->subscribe(
-                    new CallbackObserver(),
-                    new EventLoopScheduler($this->loop)
-                );
+                ->subscribe(new CallbackObserver(function (RabbitMessage $message) {
+                    Observable::just($message)
+                        ->delay(1000)
+                        ->lift(function () {
+                            return new LoopDetectorOperator($this->output);
+                        })
+                        ->flatMap($this->checkProduce())
+                        ->subscribe(
+                            new CallbackObserver(),
+                            new EventLoopScheduler($this->loop)
+                        );
+                }), new EventLoopScheduler($this->loop));
         });
     }
 
@@ -149,7 +155,7 @@ class HardCombinedConsumer
                     );
                 })
                 ->flatMap($this->produce())
-                ->doOnNext(function(Event $event) use ($messageStream) {
+                ->doOnNext(function (Event $event) use ($messageStream) {
                     if ($event->is('/complete')) {
                         $messageStream->onCompleted();
                     }
@@ -184,7 +190,7 @@ class HardCombinedConsumer
 
             // Give 2s to handle the subject or reject it to bottom (with all its changes)
             $subject
-                ->filter(function(Event $event){
+                ->filter(function (Event $event) {
                     return !$event->is('/complete');
                 })
                 ->flatMap(function () use ($message) {
@@ -214,25 +220,6 @@ class HardCombinedConsumer
             $subject->onNext(new Event('Lets produce'));
 
             return $subject;
-        };
-    }
-
-    private function checkLoop($callable = null)
-    {
-        return function (RabbitMessage $message) use ($callable) {
-            $datas = $message->getData();
-            if (isset($datas['type']) && $datas['type'] === 'looper') {
-                $this->output->writeln('<fg=magenta>+1 tour</>');
-                $message
-                    ->rejectToBottom()
-                    ->subscribe(
-                        new CallbackObserver(),
-                        new EventLoopScheduler($this->loop)
-                    );
-                return Observable::emptyObservable();
-            }
-
-            return Observable::just($message);
         };
     }
 }
