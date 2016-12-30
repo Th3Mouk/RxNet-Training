@@ -130,3 +130,20 @@ Check if a map or a flatMap or something else don't miss a return.
 #### Hell how this can be functional ?
 
 [code](https://github.com/ReactiveX/RxPHP/blob/4807ab11285bb3f5e665cff2ead766d72f775a87/lib/Rx/Operator/CountOperator.php#L45)
+
+#### I'm tired to stub onNext, onError and onComplete
+
+Use the StOutObserver to debug easily.
+
+## General Observation
+
+The events doesn't bubble, after all `onNext` the chain don't ascend back all 
+`onComplete`. The `onComplete` start from the bottom of the chain.
+
+We can see an observable like a context.
+
+If you want to call your `onComplete` in operator or whatever, make sur to end
+your observable.
+
+How to manage error when one of multiple service is deconnected ? 
+(ex: rabbit/redis)

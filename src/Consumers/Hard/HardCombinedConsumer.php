@@ -13,11 +13,12 @@ use EventLoop\EventLoop;
 use Rx\Observable;
 use Rx\Observer\CallbackObserver;
 use Rx\Scheduler\EventLoopScheduler;
+use Rx\Subject\Subject;
 use Rxnet\Event\Event;
 use Rxnet\RabbitMq\RabbitMessage;
 use Rxnet\Routing\RoutableSubject;
 use Symfony\Component\Console\Output\OutputInterface;
-use Th3Mouk\RxTraining\Extractors\RabbitExtractor;
+use Th3Mouk\RxTraining\Operators\RedisMessageFilterOperator;
 
 class HardCombinedConsumer
 {
@@ -77,7 +78,7 @@ class HardCombinedConsumer
                 return $errors
                     ->delay(2000)
                     ->doOnNext(function () {
-                        echo "Rabbit is disconnected, retrying\n";
+                        $this->output->writeln('<fg=red>Rabbit is disconnected, retrying</>');
                     });
             })
             ->subscribe(
@@ -125,21 +126,48 @@ class HardCombinedConsumer
                 $this->consumer->dispose();
             }
 
-            // Will wait for message
             $this->consumer = $queue->consume()
                 ->delay(1000)
                 ->flatMap($this->checkLoop())
-                ->flatMap($this->filterRedis('delivery', 2))
+                ->flatMap($this->checkProduce())
                 ->subscribe(
-                    $this->produce(),
+                    new CallbackObserver(),
                     new EventLoopScheduler($this->loop)
                 );
         });
     }
 
+    private function checkProduce()
+    {
+        return function (RabbitMessage $message) {
+            $messageStream = new Subject();
+
+            $messageStream
+                ->lift(function () {
+                    return new RedisMessageFilterOperator(
+                        $this->output, $this->redis, 'delivery', 2
+                    );
+                })
+                ->flatMap($this->produce())
+                ->doOnNext(function(Event $event) use ($messageStream) {
+                    if ($event->is('/complete')) {
+                        $messageStream->onCompleted();
+                    }
+                })
+                ->subscribe(
+                    new CallbackObserver(),
+                    new EventLoopScheduler($this->loop)
+                );
+
+            $messageStream->onNext($message);
+
+            return $messageStream;
+        };
+    }
+
     private function produce()
     {
-        return new CallbackObserver(function (RabbitMessage $message) {
+        return function (RabbitMessage $message) {
             $data = $message->getData();
 
             if (isset($data['name'])) {
@@ -156,10 +184,14 @@ class HardCombinedConsumer
 
             // Give 2s to handle the subject or reject it to bottom (with all its changes)
             $subject
+                ->filter(function(Event $event){
+                    return !$event->is('/complete');
+                })
                 ->flatMap(function () use ($message) {
                     // Rabbit will handle serialize and unserialize
                     return $this->exchange->produce($message->getData(), self::ROUTING_KEY_PIZZA_PREPARATION);
                 })
+                ->take(1)
                 ->timeout(2000)
                 ->subscribeCallback(
                     // Ignore onNext
@@ -169,22 +201,20 @@ class HardCombinedConsumer
                         $this->output->writeln('<error>Something wrong with '.$datas['name'].' order</error>');
                         $message->rejectToBottom();
                     },
-                    function () use ($message) {
-                        $label = RabbitExtractor::extract($message, 'delivery');
-                        // Here you must record in redis the message
-                        $this->redis->setEx($label, 2, true);
-
+                    function () use ($message, $subject) {
                         $datas = $message->getData();
                         $this->output->writeln('<leaf>Preparation of '.$datas['name'].' order started</leaf>');
                         $message->ack();
+
+                        $subject->onNext(new Event('/complete'));
                     },
                     new EventLoopScheduler($this->loop)
             );
 
-            $subject->onNext(new Event("I'm a stub !"));
+            $subject->onNext(new Event('Lets produce'));
 
-            $subject->onCompleted();
-        });
+            return $subject;
+        };
     }
 
     private function checkLoop($callable = null)
@@ -203,28 +233,6 @@ class HardCombinedConsumer
             }
 
             return Observable::just($message);
-        };
-    }
-
-    private function filterRedis($path, $seconds)
-    {
-        return function (RabbitMessage $message) use ($path, $seconds) {
-            $label = RabbitExtractor::extract($message, $path);
-            return $this->redis->exists($label)
-                ->filter(function ($existInRedis) use ($message, $label, $seconds) {
-                    $existInRedis = (bool) $existInRedis;
-                    // If message already exists then just ignore it
-                    if (true === $existInRedis) {
-                        $this->output->writeln('<comment>Ignore double on '.$label.' label</comment>');
-                        $message->ack();
-                        return false;
-                    }
-
-                    return true;
-                })
-                ->map(function () use ($message) {
-                    return $message;
-                });
         };
     }
 }
