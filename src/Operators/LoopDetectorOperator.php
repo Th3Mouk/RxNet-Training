@@ -10,7 +10,6 @@
 namespace Th3Mouk\RxTraining\Operators;
 
 use EventLoop\EventLoop;
-use Rx\Observable;
 use Rx\ObservableInterface;
 use Rx\Observer\CallbackObserver;
 use Rx\ObserverInterface;
@@ -28,12 +27,19 @@ class LoopDetectorOperator implements OperatorInterface
     private $output;
 
     /**
+     * @var \Closure
+     */
+    private $callable;
+
+    /**
      * LoopDetectorOperator constructor.
      * @param OutputInterface $output
+     * @param \Closure $callable
      */
-    public function __construct(OutputInterface $output)
+    public function __construct(OutputInterface $output, \Closure $callable)
     {
         $this->output = $output;
+        $this->callable = $callable;
     }
 
     /**
@@ -48,7 +54,7 @@ class LoopDetectorOperator implements OperatorInterface
             ->subscribe(new CallbackObserver(
                 function (RabbitMessage $message) use ($observer) {
                     $datas = $message->getData();
-                    if (isset($datas['type']) && $datas['type'] === 'looper') {
+                    if (call_user_func($this->callable, $datas)) {
                         $this->output->writeln('<fg=magenta>+1 tour</>');
                         $message
                             ->rejectToBottom()

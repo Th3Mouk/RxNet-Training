@@ -132,7 +132,12 @@ class HardCombinedConsumer
                     Observable::just($message)
                         ->delay(1000)
                         ->lift(function () {
-                            return new LoopDetectorOperator($this->output);
+                            return new LoopDetectorOperator(
+                                $this->output,
+                                function ($datas) {
+                                    return (isset($datas['type']) && $datas['type'] === 'looper') ? true : false;
+                                }
+                            );
                         })
                         ->flatMap($this->checkProduce())
                         ->subscribe(
