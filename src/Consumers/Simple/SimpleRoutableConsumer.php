@@ -12,7 +12,6 @@ namespace Th3Mouk\RxTraining\Consumers\Simple;
 use Rx\Observer\CallbackObserver;
 use Rx\Scheduler\EventLoopScheduler;
 use Rxnet\RabbitMq\RabbitMessage;
-use Rxnet\Routing\RoutableSubject;
 
 class SimpleRoutableConsumer extends SimpleBaseConsumer
 {
@@ -24,7 +23,7 @@ class SimpleRoutableConsumer extends SimpleBaseConsumer
     /**
      * @var \Rxnet\RabbitMq\RabbitExchange
      */
-    private $exchange;
+    protected $exchange;
 
     public function start()
     {
@@ -32,14 +31,14 @@ class SimpleRoutableConsumer extends SimpleBaseConsumer
         \Rxnet\awaitOnce($this->rabbit->connect());
 
         $queue = $this->rabbit->queue('simple_second_queue');
-        $exchange = $this->rabbit->exchange('amq.direct');
+        $this->exchange = $this->rabbit->exchange('amq.direct');
 
-        // Start an observable sequence
+        // This consumer is an alternative from SimpleProducerConsumer
         $queue->create($queue::DURABLE)
             ->zip([
-                $exchange->create($exchange::TYPE_DIRECT, [
-                    $exchange::DURABLE,
-                    $exchange::AUTO_DELETE
+                $this->exchange->create(($this->exchange)::TYPE_DIRECT, [
+                    ($this->exchange)::DURABLE,
+                    ($this->exchange)::AUTO_DELETE
                 ]),
                 // Bind on a routing key (here pizza.preparation)
                 $queue->bind(self::ROUTING_KEY_PIZZA_PREPARATION, 'amq.direct')
@@ -48,12 +47,14 @@ class SimpleRoutableConsumer extends SimpleBaseConsumer
                 $this->output->writeln("<info>Exchange, and queue are created and bounded</info>");
             })
             // Everything's done let's produce
-            ->subscribe(new CallbackObserver(function () use ($exchange) {
+            ->subscribe(new CallbackObserver(function () {
                 $queue = $this->rabbit->queue('simple_queue');
                 $queue->setQos(1);
 
                 // Will wait for message
                 $queue->consume()
+                    // Here the CallbackObserver is extract into an other
+                    // function for readability
                     ->subscribe($this->producer());
             }), new EventLoopScheduler($this->loop));
 
@@ -68,31 +69,44 @@ class SimpleRoutableConsumer extends SimpleBaseConsumer
 
             $this->output->writeln('<info>Just received '.$perso_name.' order</info>');
 
-            $subject = new RoutableSubject($message->getRoutingKey(), $message->getData(), $message->getLabels());
-            // Give 5s to handle the subject or reject it to bottom (with all its changes)
-            $subject->timeout(5000)
+            $subject = new \Rxnet\Routing\RoutableSubject(
+                $message->getRoutingKey(),
+                $message->getData(),
+                $message->getLabels()
+            );
+
+            // A routable subject is a promise that can be executed whenever
+            // in the future by sending an event.
+            // In our case we add an additionnal operator that give 5s to
+            // produce or the subject is rejected
+            $subject
+                // Only take the first event for the timeout, else 5s after the
+                // first event completion (at the second empty attempt) an
+                // error will be throwned.
+                ->take(1)
+                ->timeout(5000)
+                ->flatMap(function ($datas) {
+                    // Rabbit will handle serialize and unserialize
+                    return $this->exchange->produce($datas, self::ROUTING_KEY_PIZZA_PREPARATION);
+                })
                 ->subscribeCallback(
-                // Ignore onNext
-                    null,
-                    function () use ($message) {
-                        $datas = $message->getData();
-                        $this->output->writeln('<error>Something wrong with '.$datas['name'].' order</error>');
-                        $message->rejectToBottom();
-                    },
                     function () use ($message) {
                         $datas = $message->getData();
                         $this->output->writeln('<leaf>Preparation of '.$datas['name'].' order started</leaf>');
                         $message->ack();
                     },
+                    function () use ($message) {
+                        $datas = $message->getData();
+                        $this->output->writeln('<error>Something wrong with '.$datas['name'].' order</error>');
+                        $message->reject();
+                    },
+                    null,
                     new EventLoopScheduler($this->loop)
                 );
 
-            $subject->flatMap(function ($datas) {
-                // Rabbit will handle serialize and unserialize
-                return $this->exchange->produce($datas, self::ROUTING_KEY_PIZZA_PREPARATION);
-            });
-
-            $subject->onCompleted();
+            // Here we are cheating by calling ourselves the message production
+            // This example is pretty bad because it's not a real case.
+            $subject->onNext(new \Rxnet\Event\Event('Start'));
         });
     }
 }

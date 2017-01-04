@@ -27,8 +27,10 @@ class SimpleBufferedConsumer extends SimpleBaseConsumer
 
         // Will wait for message
         $queue->consume()
+            // This operator stack messages and return [] of message
             ->bufferWithCount(3)
             ->delay(1000)
+            // So here we receive an array and not a RabbitMessage or Observable
             ->subscribe(new CallbackObserver(function (array $messages) {
                 foreach ($messages as $message) {
                     $data = $message->getData();

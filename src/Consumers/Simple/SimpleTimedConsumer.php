@@ -28,6 +28,7 @@ class SimpleTimedConsumer extends SimpleBaseConsumer
 
         // Will wait for message
         $queue->consume()
+            // Get the message and wait 1s before release him to next operator
             ->delay(1000)
             ->subscribe(new CallbackObserver(function (RabbitMessage $message) {
                 $data = $message->getData();
@@ -36,6 +37,7 @@ class SimpleTimedConsumer extends SimpleBaseConsumer
                 $this->output->writeln('<info>Just received '.$perso_name.' order</info>');
 
                 $message->ack();
+                // don't forget to add the scheduler when you manipulate time
             }), new EventLoopScheduler($this->loop));
 
         $this->loop->run();

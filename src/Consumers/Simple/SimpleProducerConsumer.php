@@ -19,56 +19,69 @@ class SimpleProducerConsumer extends SimpleBaseConsumer
      */
     const ROUTING_KEY_PIZZA_PREPARATION = 'pizza.preparation';
 
+    /**
+     * @var \Rxnet\RabbitMq\RabbitExchange
+     */
+    protected $exchange;
+
     public function start()
     {
         // Wait for rabbit to be connected
         \Rxnet\awaitOnce($this->rabbit->connect());
 
-        $queue = $this->rabbit->queue('simple_queue', []);
-        $queue->setQos(1);
+        $queue = $this->rabbit->queue('simple_second_queue', []);
+        $this->exchange = $this->rabbit->exchange('amq.direct');
 
-        // Will wait for message
-        $queue->consume()
-            ->subscribeCallback(function (RabbitMessage $message) {
-                $data = $message->getData();
-                $perso_name = $data['name'];
+        // Before doing something else it's more convenient to bind your
+        // producer. If you do it into the consumption, you will rebind
+        // at each message received.
+        $queue->create($queue::DURABLE)
+            // This operator wait the completion of all observable in param
+            // And 'zip' all result into one Observable
+            ->zip([
+                $this->exchange->create(($this->exchange)::TYPE_DIRECT, [
+                    ($this->exchange)::DURABLE,
+                    ($this->exchange)::AUTO_DELETE
+                ]),
+                // Bind on a routing key (here pizza.preparation)
+                $queue->bind(self::ROUTING_KEY_PIZZA_PREPARATION, 'amq.direct')
+            ])
+            ->doOnNext(function () {
+                $this->output->writeln("<info>Exchange, and queue are created and bounded</info>");
+            })
+            // Everything's done let's consume
+            ->subscribeCallback(function () {
+                $queue = $this->rabbit->queue('simple_queue', []);
+                $queue->setQos(1);
 
-                $this->output->writeln('<info>Just received '.$perso_name.' order</info>');
+                // Will wait for message
+                $queue->consume()
+                    ->subscribeCallback(function (RabbitMessage $message) {
+                        $data = $message->getData();
+                        $perso_name = $data['name'];
 
-                $queue = $this->rabbit->queue('simple_second_queue', []);
-                $exchange = $this->rabbit->exchange('amq.direct');
+                        $this->output->writeln('<info>Just received '.$perso_name.' order</info>');
 
-                // Start an observable sequence
-                $queue->create($queue::DURABLE)
-                    ->zip([
-                        $exchange->create($exchange::TYPE_DIRECT, [
-                            $exchange::DURABLE,
-                            $exchange::AUTO_DELETE
-                        ]),
-                        // Bind on a routing key (here pizza.preparation)
-                        $queue->bind(self::ROUTING_KEY_PIZZA_PREPARATION, 'amq.direct')
-                    ])
-                    ->doOnNext(function () {
-                        $this->output->writeln("<info>Exchange, and queue are created and bounded</info>");
-                    })
-                    // Everything's done let's produce
-                    ->subscribeCallback(function () use ($exchange, $message) {
+                        // Create an observable to produce into a queue because
+                        // this operation is asynch
                         \Rx\Observable::just($message->getData())
-                            ->flatMap(function ($datas) use ($exchange) {
+                            ->flatMap(function ($datas) {
                                 // Rabbit will handle serialize and unserialize
-                                return $exchange->produce($datas, self::ROUTING_KEY_PIZZA_PREPARATION);
+                                return $this->exchange->produce($datas, self::ROUTING_KEY_PIZZA_PREPARATION);
                             })
-                            // Let's get some stats
+                            // You're done, here you have produce your message
                             ->subscribeCallback(
                                 null, null,
                                 function () use ($message) {
                                     $datas = $message->getData();
                                     $this->output->writeln('<leaf>Preparation of '.$datas['name'].' order started</leaf>');
+                                    // And the finality you can say 'YAY', I've
+                                    // fully handle my message
                                     $message->ack();
                                 }
                             );
-                    });
-            }, null, null, new EventLoopScheduler($this->loop));
+                    }, null, null, new EventLoopScheduler($this->loop));
+            });
 
         $this->loop->run();
     }

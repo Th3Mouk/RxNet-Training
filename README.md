@@ -8,7 +8,23 @@ How to cook the :rabbit: with
 This is a simple test project, to learn how to produce and consume messages, 
 whatever interupts.
 
-**Start from 0 to hero.**
+**Start from zero to hero.**
+
+You can learn with documented consumers, and a new notion each time.
+
+## Learn is fun
+
+You can practice with following chapters, but if you prefer theory you have 
+here the glossary of concepts:
+
+1. [How to consume](/src/Consumers/Simple/SimpleConsumer.php)
+2. [How to handle disconnetion](/src/Consumers/Simple/SimpleDisconnectedConsumer.php)
+3. [How to consume with interval](/src/Consumers/Simple/SimpleTimedConsumer.php)
+4. [How to wait severals message before starting](/src/Consumers/Simple/SimpleBufferedConsumer.php)
+5. [How to consume and then produce](/src/Consumers/Simple/SimpleProducerConsumer.php)
+6. [How to consume and then produce with routable subjects](/src/Consumers/Simple/SimpleRoutableConsumer.php)
+7. [How to consume and handle special messages](/src/Consumers/Simple/SimpleLooperConsumer.php)
+8. [How to consume and ignore duplicate messages](/src/Consumers/Simple/SimpleDuplicateConsumer.php)
 
 ## Installation
 
@@ -18,7 +34,7 @@ Don't forget to configure ports of RabbitMQ on your machine.
 
 Clone the project and launch `composer install`.
 
-### Redis
+#### Redis
 
 For some consumer you need to install a Redis container.
 

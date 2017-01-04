@@ -19,7 +19,9 @@ class SimpleConsumer extends SimpleBaseConsumer
         // Wait for rabbit to be connected
         \Rxnet\awaitOnce($this->rabbit->connect());
 
+        // Plug the rabbit asynch consumer to a queue
         $queue = $this->rabbit->queue('simple_queue', []);
+        // Say to rabbit to get only one message at same time
         $queue->setQos(1);
 
         // Will wait for message
