@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-require __DIR__.'/vendor/autoload.php';
+require __DIR__.'/../vendor/autoload.php';
 
 use Symfony\Component\Console\Application;
 use Th3Mouk\RxTraining\Commands\{HelloCommand, ProduceCommand, ConsumeCommand};

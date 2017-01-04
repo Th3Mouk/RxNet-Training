@@ -26,13 +26,13 @@ For some consumer you need to install a Redis container.
 
 To test if the project is installed on your machine
 
-`php run hello`
+`php bin/run hello`
 
 ## Start producer
 
 This command start to produce a number of message.
 
-`php run produce`
+`php bin/run produce`
 
 **Options**
 - type: default `orders`
@@ -44,7 +44,7 @@ This command start to produce a number of message.
 
 There is several way to consume messages.
 
-`php run consume`
+`php bin/run consume`
 
 **Options**
 - type: default `simple`
@@ -61,7 +61,7 @@ There is several way to consume messages.
     - `hard` (use operators)
     
 **Example**
-`php run consume --type=buffered --level=hard`
+`php bin/run consume --type=buffered --level=hard`
 
 ## I'm a noob OMG help me
 
