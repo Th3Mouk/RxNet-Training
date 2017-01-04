@@ -26,6 +26,14 @@ here the glossary of concepts:
 7. [How to consume and handle special messages](/src/Consumers/Simple/SimpleLooperConsumer.php)
 8. [How to consume and ignore duplicate messages](/src/Consumers/Simple/SimpleDuplicateConsumer.php)
 
+Once you have understood all of them, we got a last example what mixing all 
+this concepts:
+
+[The HardConsumer](/src/Consumers/Hard/HardCombinedConsumer.php)
+
+In this example we introduce the notion of custom operators, and we have nice 
+examples of (routable) subjects that is observable and observer. 
+
 ## Installation
 
 Install Docker and Kitematic, and so click on install RabbitMQ.

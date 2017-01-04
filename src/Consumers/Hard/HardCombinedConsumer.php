@@ -67,6 +67,9 @@ class HardCombinedConsumer
         $this->redis = new \Rxnet\Redis\Redis();
     }
 
+    /**
+     * This method start redis and handle rabbit disconnection
+     */
     public function start()
     {
         // Wait redis connection before start something
@@ -82,6 +85,7 @@ class HardCombinedConsumer
                         $this->output->writeln('<fg=red>Rabbit is disconnected, retrying</>');
                     });
             })
+            // Once all is connected we can bind a producer
             ->subscribe(
                 $this->bindProducer(),
                 new EventLoopScheduler($this->loop)
@@ -90,6 +94,11 @@ class HardCombinedConsumer
         $this->loop->run();
     }
 
+    /**
+     * Manage the binding of a producer
+     *
+     * @return CallbackObserver
+     */
     private function bindProducer()
     {
         return new CallbackObserver(function () {
@@ -109,7 +118,7 @@ class HardCombinedConsumer
                 ->doOnNext(function () {
                     $this->output->writeln("<info>Exchange, and queue are created and bounded</info>");
                 })
-                // Everything's done let's produce
+                // Everything's done let's consuming
                 ->subscribe(
                     $this->consume(),
                     new EventLoopScheduler($this->loop)
@@ -117,6 +126,12 @@ class HardCombinedConsumer
         });
     }
 
+    /**
+     * This method is responsible of consuming the queue and manage the
+     * rabbit restart
+     *
+     * @return CallbackObserver
+     */
     private function consume()
     {
         return new CallbackObserver(function () {
@@ -129,8 +144,18 @@ class HardCombinedConsumer
 
             $this->consumer = $queue->consume()
                 ->subscribe(new CallbackObserver(function (RabbitMessage $message) {
+                    // Here we need to create our own 'context', an observable.
+                    // Because in this callback we need to perform a onComplete
+                    // event. And it will terminate the consume, and it's bad,
+                    // we just want to complete the message event, not the
+                    // consuming
                     Observable::just($message)
                         ->delay(1000)
+                        // This operator only listen on the next event and he's
+                        // a filter for special messages.
+                        // Some on them are reject to the bottom of the queue
+                        // and the event chain is stopped, the consumer send a
+                        // new message.
                         ->lift(function () {
                             return new LoopDetectorOperator(
                                 $this->output,
@@ -139,6 +164,7 @@ class HardCombinedConsumer
                                 }
                             );
                         })
+                        // We can now check if we need to produce an new message
                         ->flatMap($this->checkProduce())
                         ->subscribe(
                             new CallbackObserver(),
@@ -148,9 +174,16 @@ class HardCombinedConsumer
         });
     }
 
+    /**
+     * Here we check if message aren't not duplicated and all Redis operations
+     *
+     * @return \Closure
+     */
     private function checkProduce()
     {
         return function (RabbitMessage $message) {
+            // A subject is an extend of an Observable
+            // In our case it's an open stream, waiting a rabbit message
             $messageStream = new Subject();
 
             $messageStream
@@ -159,7 +192,12 @@ class HardCombinedConsumer
                         $this->output, $this->redis, 'delivery', 2
                     );
                 })
+                // Here we produce the message if Redis operator don't filter
                 ->flatMap($this->produce())
+                // The produce method return events here.
+                // If the event report a completion it's here that we trigger
+                // complete manually the end of the stream and the Redis
+                // operator onComplete callback.
                 ->doOnNext(function (Event $event) use ($messageStream) {
                     if ($event->is('pizza.ordering.complete')) {
                         $messageStream->onCompleted();
@@ -170,12 +208,20 @@ class HardCombinedConsumer
                     new EventLoopScheduler($this->loop)
                 );
 
+            // Once our stream is declared we send the rabbit message into him
+            // to start the event chain.
             $messageStream->onNext($message);
 
+            // And we return our (stream/subject) observable to the flatMap
             return $messageStream;
         };
     }
 
+    /**
+     * Produce the message in another queue
+     *
+     * @return \Closure
+     */
     private function produce()
     {
         return function (RabbitMessage $message) {
@@ -186,6 +232,8 @@ class HardCombinedConsumer
                 $this->output->writeln('<info>Just received '.$perso_name.' order</info>');
             }
 
+            // Here we create a routable subject that recall himself when he
+            // add finished to produce
             $subject = new RoutableSubject(
                 $message->getRoutingKey(),
                 $message->getData(),
@@ -194,11 +242,13 @@ class HardCombinedConsumer
 
             // Give 2s to handle the subject or reject it to bottom (with all its changes)
             $subject
+                // First if a complete event arrive here 'STOP' !
+                // We have already produce so don't do it again
                 ->filter(function (Event $event) {
                     return !$event->is('pizza.ordering.complete');
                 })
+                // Wait producing
                 ->flatMap(function () use ($message) {
-                    // Rabbit will handle serialize and unserialize
                     return $this->exchange->produce($message->getData(), self::ROUTING_KEY_PIZZA_PREPARATION);
                 })
                 ->take(1)
@@ -212,15 +262,20 @@ class HardCombinedConsumer
                         $message->rejectToBottom();
                     },
                     function () use ($message, $subject) {
+                        // The timeout send to onComplete and not to onNext /!\
                         $datas = $message->getData();
                         $this->output->writeln('<leaf>Preparation of '.$datas['name'].' order started</leaf>');
+                        // All is done so you can ack the message because
+                        // if Redis didn't write, it doesn't matter
                         $message->ack();
 
+                        // Dispatch the great news, we finished !
                         $subject->onNext(new Event('pizza.ordering.complete'));
                     },
                     new EventLoopScheduler($this->loop)
             );
 
+            // Now all is binding, let's start producing !
             $subject->onNext(new Event('pizza.ordering.send'));
 
             return $subject;
