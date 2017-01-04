@@ -4,6 +4,7 @@ enabled:
   - combine_consecutive_unsets
   - newline_after_open_tag
   - no_php4_constructor
+  - no_unused_imports
   - no_useless_else
   - ordered_class_elements
   - ordered_use

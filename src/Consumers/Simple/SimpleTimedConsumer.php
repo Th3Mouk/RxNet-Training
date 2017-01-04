@@ -9,43 +9,15 @@
 
 namespace Th3Mouk\RxTraining\Consumers\Simple;
 
-use EventLoop\EventLoop;
 use Rx\Observer\CallbackObserver;
 use Rx\Scheduler\EventLoopScheduler;
 use Rxnet\RabbitMq\RabbitMessage;
-use Symfony\Component\Console\Output\Output;
 
 /**
  * This consumer consume a message each second
  */
-class SimpleTimedConsumer
+class SimpleTimedConsumer extends SimpleBaseConsumer
 {
-    /**
-     * @var Output
-     */
-    private $output;
-
-    /**
-     * @var \React\EventLoop\LibEventLoop
-     */
-    private $loop;
-
-    /**
-     * @var \Rxnet\RabbitMq\RabbitMq
-     */
-    private $rabbit;
-
-    /**
-     * SimpleTimedConsumer constructor.
-     * @param Output $output
-     */
-    public function __construct(Output $output)
-    {
-        $this->output = $output;
-        $this->loop = EventLoop::getLoop();
-        $this->rabbit = new \Rxnet\RabbitMq\RabbitMq('rabbit://guest:guest@127.0.0.1:5672/', new \Rxnet\Serializer\Serialize());
-    }
-
     public function start()
     {
         // Wait for rabbit to be connected

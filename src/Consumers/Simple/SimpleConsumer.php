@@ -9,45 +9,24 @@
 
 namespace Th3Mouk\RxTraining\Consumers\Simple;
 
-use EventLoop\EventLoop;
 use Rx\Scheduler\EventLoopScheduler;
 use Rxnet\RabbitMq\RabbitMessage;
-use Symfony\Component\Console\Output\Output;
 
-class SimpleConsumer
+class SimpleConsumer extends SimpleBaseConsumer
 {
-    /**
-     * @var Output
-     */
-    private $output;
-
-    /**
-     * PizzaOrderingConsumer constructor.
-     * @param Output $output
-     */
-    public function __construct(Output $output)
-    {
-        $this->output = $output;
-    }
-
     public function start()
     {
-        $loop = EventLoop::getLoop();
-        $rabbit = new \Rxnet\RabbitMq\RabbitMq('rabbit://guest:guest@127.0.0.1:5672/', new \Rxnet\Serializer\Serialize());
-
         // Wait for rabbit to be connected
-        \Rxnet\awaitOnce($rabbit->connect());
+        \Rxnet\awaitOnce($this->rabbit->connect());
 
-        $queue = $rabbit->queue('simple_queue', []);
+        $queue = $this->rabbit->queue('simple_queue', []);
         $queue->setQos(1);
 
         // Will wait for message
         $queue->consume()
-            ->subscribeCallback(function (RabbitMessage $message) use ($rabbit) {
+            ->subscribeCallback(function (RabbitMessage $message) {
                 $data = $message->getData();
                 $perso_name = $data['name'];
-
-                $head = $message->getLabels();
 
                 $this->output->writeln('<info>Just received '.$perso_name.' order</info>');
 
@@ -56,8 +35,8 @@ class SimpleConsumer
                 //$message->nack();
                 //$message->reject();
                 //$message->rejectToBottom();
-            }, null, null, new EventLoopScheduler($loop));
+            }, null, null, new EventLoopScheduler($this->loop));
 
-        $loop->run();
+        $this->loop->run();
     }
 }

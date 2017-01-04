@@ -9,14 +9,12 @@
 
 namespace Th3Mouk\RxTraining\Consumers\Simple;
 
-use EventLoop\EventLoop;
 use Rx\Observer\CallbackObserver;
 use Rx\Scheduler\EventLoopScheduler;
 use Rxnet\RabbitMq\RabbitMessage;
 use Rxnet\Routing\RoutableSubject;
-use Symfony\Component\Console\Output\Output;
 
-class SimpleRoutableConsumer
+class SimpleRoutableConsumer extends SimpleBaseConsumer
 {
     /**
      * The binding key to use when an order goes to preparation
@@ -24,35 +22,9 @@ class SimpleRoutableConsumer
     const ROUTING_KEY_PIZZA_PREPARATION = 'pizza.preparation';
 
     /**
-     * @var Output
-     */
-    private $output;
-
-    /**
-     * @var \React\EventLoop\LibEventLoop
-     */
-    private $loop;
-
-    /**
-     * @var \Rxnet\RabbitMq\RabbitMq
-     */
-    private $rabbit;
-
-    /**
      * @var \Rxnet\RabbitMq\RabbitExchange
      */
     private $exchange;
-
-    /**
-     * SimpleRoutableConsumer constructor.
-     * @param Output $output
-     */
-    public function __construct(Output $output)
-    {
-        $this->output = $output;
-        $this->loop = EventLoop::getLoop();
-        $this->rabbit = new \Rxnet\RabbitMq\RabbitMq('rabbit://guest:guest@127.0.0.1:5672/', new \Rxnet\Serializer\Serialize());
-    }
 
     public function start()
     {
