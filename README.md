@@ -63,7 +63,7 @@ There is several way to consume messages.
 **Example**
 `php run consume --type=buffered --level=hard`
 
-## I'm a f***ing noob OMG help me
+## I'm a noob OMG help me
 
 Read the special [FAQ](resources/doc/hello-im-noob.md).
 
